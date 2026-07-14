@@ -1074,9 +1074,12 @@ document.addEventListener('click', function(e) {
     apiFetch('/days?select=*&order=di'),
     apiFetch('/direto_results?select=*&order=di&order=camp_n'),
     apiFetch('/msgs_results?select=*&order=di&order=carro_n'),
-    apiFetch('/v_campaign_roi_history?select=*')
+    apiFetch('/v_campaign_roi_history?select=*'),
+    apiFetch('/campaigns?select=camp_n,label,typ')
   ]).then(function(res) {
-    var daysData=res[0], dreData=res[1], mreData=res[2], histData=res[3];
+    var daysData=res[0], dreData=res[1], mreData=res[2], histData=res[3], campsData=res[4];
+    var msgsCampLbl={}, diretoCampLbl={};
+    campsData.forEach(function(c){if(c.typ==='msgs')msgsCampLbl[c.camp_n]=c.label;else if(c.typ==='direto')diretoCampLbl[c.camp_n]=c.label;});
     // HIST
     histData.forEach(function(r){if(!HIST[r.label])HIST[r.label]={};HIST[r.label][r.di]=r.roi;});
     // Index by di
@@ -1087,13 +1090,13 @@ document.addEventListener('click', function(e) {
     DAYS = daysData.map(function(day) {
       var di=day.di;
       var direto=(dByDi[di]||[]).map(function(r){
-        return {label:'CAMP'+r.camp_n,n:r.camp_n,spend:+r.spend,tax:+r.tax,cost:+r.cost,
+        return {label:diretoCampLbl[r.camp_n]||('CAMP'+r.camp_n),n:r.camp_n,spend:+r.spend,tax:+r.tax,cost:+r.cost,
           rev:+r.rev,rev_adj:+r.rev_adj,profit:+r.profit,roi:r.roi!==null?+r.roi:null,
           rpm:+r.rpm,gam_imp:r.gam_imp,fb_imp:r.fb_imp,status:r.status,typ:'direto',
           broad_rev:+r.broad_rev,cap_rev:+r.cap_rev};
       });
       var msgs=(mByDi[di]||[]).map(function(r){
-        return {label:'CARRO'+r.carro_n,n:r.carro_n,suffix:r.suffix,
+        return {label:msgsCampLbl[r.carro_n]||('CARRO'+r.carro_n),n:r.carro_n,suffix:r.suffix,
           spend:+r.spend,tax:+r.tax,cost:+r.cost,broad_rev:+r.broad_rev,cap_rev:+r.cap_rev,
           rev:+r.rev,rev_adj:+r.rev_adj,profit:+r.profit,roi:r.roi!==null?+r.roi:null,
           rpm:+r.rpm,broad_imp:r.broad_imp,cap_imp:r.cap_imp,fb_imp:r.fb_imp,
